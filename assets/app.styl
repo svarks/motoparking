@@ -1,0 +1,35 @@
+$toolbar-height = 50px
+
+html, body
+  margin: 0
+  height: 100%
+
+body
+  background: #eee
+
+.container
+  min-height: 100%
+  position: relative
+
+.body
+  position: absolute
+  width: 100%
+  top: 0
+  bottom: $toolbar-height
+
+  .map-canvas
+    height: 100%
+
+.footer
+  position: absolute
+  width: 100%
+  bottom: 0
+  height: $toolbar-height
+
+  .button-wrapper
+    height: $toolbar-height - 20px
+    padding: 10px
+
+  .refresh-button
+    width: 100%
+    height: 100%
