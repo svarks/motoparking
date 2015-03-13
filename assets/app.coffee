@@ -1,4 +1,5 @@
-Map = require('./map')
+require './ga'
+Map = require './map'
 
 getLocation = (cb) ->
   navigator.geolocation.getCurrentPosition (position) ->
