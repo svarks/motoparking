@@ -11,25 +11,42 @@ readData = (cb) ->
 buildMeter = (data) ->
   {
     postId      : data['POST_ID']
+    msId        : data['METER_TYPE'] == 'MS' && data['MS_ID'] || null
     streetName  : data['STREETNAME']
     lat         : parseFloat(data['LAT'])
     lng         : parseFloat(data['LONG'])
     details     : data
   }
 
-loadMeters = (cb) ->
+buildMeters = (cb) ->
   readData (results) ->
     cb(results.map(buildMeter))
 
-cachedMeters = null
+buildLocations = (cb) ->
+  buildMeters (meters) ->
+    locations = {}
 
-getMeters = (cb) ->
-  if cachedMeters
-    cb(cachedMeters)
+    for meter in meters
+      key = meter.msId || meter.postId
+      location = locations[key] ?= { meters: [] }
+      location.meters.push(meter)
+
+    for id, location of locations
+      for attr in ['lat', 'lng']
+        sum = _.reduce(location.meters, ((sum, meter) -> sum + meter[attr]), 0)
+        location[attr] = sum / location.meters.length
+
+    cb(_.values(locations))
+
+cachedLocations = null
+
+getLocations = (cb) ->
+  if cachedLocations
+    cb(cachedLocations)
   else
-    loadMeters (meters) ->
-      cachedMeters = meters
-      cb(meters)
+    buildLocations (locations) ->
+      cachedLocations = locations
+      cb(locations)
 
 meters =
   search: (center, bounds, cb) ->
@@ -40,17 +57,17 @@ meters =
       neLat > meter.lat > swLat &&
       neLng > meter.lng > swLng
 
-    getMeters (meters) ->
+    getLocations (locations) ->
       results = []
 
-      for meter in meters
-        if isInBounds(meter)
-          meter = _.clone(meter)
-          meter.distance = distance([centerLat, centerLng], [meter.lat, meter.lng], true)
+      for location in locations
+        if isInBounds(location)
+          location = _.clone(location)
+          location.distance = distance([centerLat, centerLng], [location.lat, location.lng], true)
 
-          results.push(meter)
+          results.push(location)
 
-      results = _.sortBy(results, (meter) -> meter.distance)
+      results = _.sortBy(results, (location) -> location.distance)
 
       cb(results)
 

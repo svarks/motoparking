@@ -19,8 +19,8 @@ class Map
     marker.setMap(null) for marker in @markers
     @markers = []
 
-    renderMarkers = (meters) ->
-      @renderMarker(meter) for meter in meters
+    renderMarkers = (locations) ->
+      @renderMarker(location) for location in locations
 
     params =
       center: @gMap.center.toUrlValue()
@@ -28,11 +28,19 @@ class Map
 
     $.getJSON('/search', params, renderMarkers.bind(this))
 
-  renderMarker: (meter) ->
+  renderMarker: (location) ->
+    number = location.meters.length
+
+    color =
+      if number > 1
+        'fe6'
+      else
+        'f66'
+
     marker = new google.maps.Marker(
-      position: new google.maps.LatLng(meter.lat, meter.lng)
+      position: new google.maps.LatLng(location.lat, location.lng)
       map: @gMap
-      title: JSON.stringify(meter.details, null, ' ')
+      icon: "http://chart.apis.google.com/chart?chst=d_map_pin_letter&chld=#{number}|#{color}|333"
     )
 
     @markers.push(marker)
@@ -40,7 +48,7 @@ class Map
     infowindow = new google.maps.InfoWindow(
       content: """
         <pre>
-          #{JSON.stringify(meter.details, null, ' ')}
+          #{JSON.stringify(location.meters, null, ' ')}
         </pre>
       """
     )
